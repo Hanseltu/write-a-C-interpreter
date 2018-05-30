@@ -1,0 +1,53 @@
+## Main instructions for each step
+
+### Contents
+
+* step0 Framework to c interpreter
+
+* step1 Virtual machine design
+
+
+
+#### step0 : Framework to c interpreter
+
+For function in the framework
+
+next() lexcial analysis part, get next token, remove the withespace automatically.
+
+program() grammer analysis part, process the whole c codes.
+
+expression(int level) prase part, deal with the expressions.
+
+eval() entrace of virtual machine, translate the AST to object assmebly code。
+
+
+
+### step1 : Virtual machine design
+
+Three parts should be considered.
+
+1. Memory
+
+* code segment
+
+* data segment
+
+* stack
+
+2.Register
+
+* PC
+
+* SP
+
+* BP
+
+* AX
+
+3. x86 Instruction sets
+
+
+
+
+
+

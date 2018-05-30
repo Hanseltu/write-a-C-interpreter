@@ -1,4 +1,4 @@
 # README #
 
-A tiny C interpreter 
+A tiny C interpreter
 
