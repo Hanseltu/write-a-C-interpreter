@@ -146,7 +146,7 @@ int eval(){
 
         //EXIT
         else if(op == EXIT){
-            printf("exit(%d)", *sp);
+            printf("exit(%d) \n", *sp);
             return *sp;
         }
         //OPEN
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
 
     //ut: caculate 10+20
     text[i++] = IMM;
-    text[i++] = 10;
+    text[i++] = 20;
     text[i++] = PUSH;
     text[i++] = IMM;
     text[i++] = 20;
@@ -248,7 +248,7 @@ int main(int argc, char** argv)
     text[i++] = EXIT;
 
     pc = text;
-    program();
+    // program();
     return eval();
 
 }
