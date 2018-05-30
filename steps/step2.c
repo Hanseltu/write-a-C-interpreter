@@ -6,6 +6,7 @@
 #include<unistd.h>
 
 int token; //current token
+int token_val; //value of current token, mainly for numbers
 char *src, *old_src; //pointer to source code string
 int poolsize; //default size of text/data/stack
 int line; //line number
@@ -17,7 +18,7 @@ char *data; //data segment
 int *pc,*bp, *sp, ax, cycle; //virtual machine registers
 
 int *current_id; //currend parsed ID
-int *symbol; //symbol table
+int *symbols; //symbol table
 int *idmain; //the main function
 
 //x86 instruction sets
@@ -29,7 +30,7 @@ enum{LEA, IMM, JMP, CALL, JZ, JNZ, ENT, ADJ, LEV, LI, LC, SI, SC, PUSH,
 //tokens and classes
 enum{ Num = 128, Fun, Sys, Glo, Loc, Id,
     Char, Else, Enum, If, Int, Return, Sizeof, While,
-    Assign, Cond, Lor, Lan, Or, Xor, And, Eq, Ne, Lt, Gt,
+    Assign, Cond, Lor, Lan, Or, Xor, And, Eq, Ne, Lt, Gt, Ge,
     Le, Shl, Shr, Add, Sub, Mul, Div, Mod, Inc, Dec, Brak};
 
 //field of identifier
@@ -39,7 +40,234 @@ enum{Token, Hash, Name, Type, Class, Value, BType, BClass, Bvalue, IdSize};
 enum{CHAR, INT, PTR};
 
 void next(){
-    token = *src++;
+    char *last_pos;
+    int hash;
+
+    while(token == *src){
+        ++src;
+
+        //parse token
+        if(token == '\n'){
+            ++line;
+        }
+        else if(token == '#'){
+            //not support, just skip
+            while(*src != 0 && *src != '\n'){
+                src ++;
+            }
+        }
+        else if((token >= 'a' && token <= 'z') || (token >= 'A' && token <= 'Z') || (token == '_')){
+            last_pos = src - 1;
+            hash = token;
+
+            while ((*src >= 'a' && *src <= 'z') || (*src >= 'A' && *src <= 'Z') || (*src >= '0' && *src <= '9') || (*src == '_')){
+                hash = hash*147 + *src;
+                src ++;
+            }
+            //look for existing identifier,linear search
+            current_id = symbols;
+            while (current_id[Token]){
+                if (current_id[Hash] == hash && !memcmp((char*)current_id[Name], last_pos, src - last_pos)){
+                    //found success!
+                    token = current_id[Token];
+                    return;
+                }
+                current_id = current_id + IdSize;
+            }
+
+            //store New ID
+            current_id[Name] = (int)last_pos;
+            current_id[Hash] = hash;
+            token = current_id[Token] = Id;
+            return;
+        }
+        else if (token >= '0' && token <= '9'){
+            //parse numbers, support dec(123), hex(0x123), oct(017)
+            token_val = token - '0';
+            if (token_val > 0){
+                //deal with dec from1-9
+                while (*src >= '0' && *src <= '9'){
+                    token_val = token_val*10 + *src++ - '0';
+                }
+            }
+            else {
+                //start with 0
+                if (*src == 'x' || *src == 'X'){
+                    //deal with hex
+                    token = *++src;
+                    while ((token >= '0' && token <= '9') || (token >= 'a' && token <= 'z') || (token >= 'A' && token <= 'F')){
+                        token_val = token_val * 16 + (token & 15) + (token >= 'A' ? 9 : 0);
+                        token = *src++;
+                    }
+                }
+                else {
+                    //deal with oct
+                    while (*src >= '0' && *src <= '7'){
+                        token_val = token * 8 + *src++ - '0';
+                    }
+                }
+            }
+            token = Num;
+            return;
+        }
+
+        else if (token == '"' || token == '\''){
+            //parse string literal, only supportd escape character is '\n'
+            last_pos = data;
+            while (*src != 0 && *src != token){
+                token_val = *src++;
+                if (token_val == '\\'){
+                    //escape character
+                    token_val = *src++;
+                    if (token_val == 'n'){
+                        token_val = '\n';
+                    }
+                }
+                if (token == '"'){
+                    *data++ = token_val;
+                }
+            }
+            src ++;
+            //if it is a single character, return Num token
+            if (token == '"'){
+                token_val = (int)(last_pos);
+            }
+            else {
+                token = Num;
+            }
+            return;
+        }
+        else if (token == '/'){
+            if (*src == '/'){
+                //skip the comments
+                while (*src != 0 && *src != '\n'){
+                    ++src;
+                }
+            }
+            else {
+                //divide operation
+                token = Div;
+                return;
+            }
+        }
+        else if (token == '='){
+            //parse '==' and '='
+            if (*src == '='){
+                src ++;
+                token = Eq;
+            }
+            else {
+                token = Assign;
+            }
+            return;
+        }
+        else if(token == '+'){
+            //parse '++' and '+'
+            if (*src == '+'){
+                src ++;
+                token = Inc;
+            }
+            else {
+                token = Add;
+            }
+            return ;
+        }
+        else if (token == '-'){
+            //parse '--' and '-'
+            if (*src == '-'){
+                src ++;
+                token = Dec;
+            }
+            else {
+                token = Sub;
+            }
+            return ;
+        }
+        else if (token == '!'){
+            //parse '!='
+            if (*src == '='){
+                src ++;
+                token = Ne;
+            }
+            return ;
+        }
+        else if (token == '<'){
+            //parse '<=' and '<<' and '<'
+            if (*src == '='){
+                src ++;
+                token = Le;
+            }
+            else if (*src == '<'){
+                src ++;
+                token = Shl;
+            }
+            else {
+                token = Lt;
+            }
+            return;
+        }
+        else if(token == '>'){
+            //parse '>=' and '>>' and '>'
+            if (*src == '='){
+                src ++;
+                token = Ge;
+            }
+            else if (*src == '>'){
+                src ++;
+                token = Shr;
+            }
+            else {
+                token = Gt;
+            }
+            return ;
+        }
+        else if (token == '|'){
+            //parse '|' and '||'
+            if (*src == '|'){
+                src ++;
+                token = Lor;
+            }
+            else {
+                token = Or;
+            }
+            return ;
+        }
+        else if (token == '&'){
+            //parse '&' and '&&'
+            if (*src == '&'){
+                src ++;
+                token = Lan;
+            }
+            else {
+                token = And;
+            }
+            return ;
+        }
+        else if (token == '^'){
+            token = Xor;
+            return;
+        }
+        else if (token == '%'){
+            token = Mod;
+            return ;
+        }
+        else if (token == '*'){
+            token = Mul;
+            return;
+        }
+        else if (token == '['){
+            token = Brak;
+            return ;
+        }
+        else if (token == '?'){
+            token = Cond;
+            return ;
+        }
+        else if (token == '~' || token == ';' || token == '}' || token == '(' || token == ')' || token == ']' || token == ',' || token == ':'){
+            //directly return the character as token
+            return ;
+        }
+    }
     return ;
 }
 
