@@ -36,7 +36,7 @@ Three parts should be considered.
 
 * stack
 
-2.Register
+2. Register
 
 * PC
 
@@ -52,19 +52,19 @@ Three parts should be considered.
 
 ### step2 : Lexcial analysis
 
-1.method
+1. method
 
 * Input: source code
 
 * Output: token stream -->> (token, token value)
 
-Point:analyze different identifiers and stroe them in symbol table
+    Point:analyze different identifiers and stroe them in symbol table
 
-2.Identifiers
+2. Identifiers
 
-Symbol table:
+    Symbol table:
 
-`token hash name type class value btype bclass bvalue`
+    `token hash name type class value btype bclass bvalue`
 
 
 
