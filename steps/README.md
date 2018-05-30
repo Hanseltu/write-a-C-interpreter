@@ -62,9 +62,9 @@ Three parts should be considered.
 
 2.Identifiers
 
-    Symbol table:
+Symbol table:
 
-    `token hash name type class value btype bclass bvalue`
+`token hash name type class value btype bclass bvalue`
 
 
 
