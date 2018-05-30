@@ -52,7 +52,7 @@ Three parts should be considered.
 
 ### step2 : Lexcial analysis
 
-1. method
+1.method
 
 * Input: source code
 
@@ -60,7 +60,7 @@ Three parts should be considered.
 
     Point:analyze different identifiers and stroe them in symbol table
 
-2. Identifiers
+2.Identifiers
 
     Symbol table:
 
