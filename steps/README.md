@@ -6,6 +6,8 @@
 
 * step1 Virtual machine design
 
+* step2 lexcial analysis
+
 
 
 #### step0 : Framework to c interpreter
@@ -45,6 +47,26 @@ Three parts should be considered.
 * AX
 
 3. x86 Instruction sets
+
+
+
+### step2 : Lexcial analysis
+
+1.method
+
+* Input: source code
+
+* Output: token stream -->> (token, token value)
+
+Point:analyze different identifiers and stroe them in symbol table
+
+2.Identifiers
+
+Symbol table:
+
+`token hash name type class value btype bclass bvalue`
+
+
 
 
 

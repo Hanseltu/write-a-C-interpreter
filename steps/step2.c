@@ -237,8 +237,7 @@ int main(int argc, char** argv)
     bp = sp = (int *)((int)stack + poolsize);
     ax = 0;
 
-    //ut: caculate 10+20
-    //test virtual machine `
+    //*******ut: caculate 10+20*****
     i=0;
     text[i++] = IMM;
     text[i++] = 20;
@@ -248,9 +247,9 @@ int main(int argc, char** argv)
     text[i++] = ADD;
     text[i++] = PUSH;
     text[i++] = EXIT;
-
     pc = text;
-    // program();
+    //******************************
+    program();
     //printf("The int size is %d\n",sizeof(int));
     //printf("The long size is %d\n",sizeof(long));
     return eval();
