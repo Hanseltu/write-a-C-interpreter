@@ -28,7 +28,7 @@ eval() entrace of virtual machine, translate the AST to object assmebly code。
 
 Three parts should be considered.
 
-1. Memory
+1.Memory
 
 * code segment
 
@@ -36,7 +36,7 @@ Three parts should be considered.
 
 * stack
 
-2. Register
+2.Register
 
 * PC
 
@@ -46,7 +46,7 @@ Three parts should be considered.
 
 * AX
 
-3. x86 Instruction sets
+3.x86 Instruction sets
 
 
 
