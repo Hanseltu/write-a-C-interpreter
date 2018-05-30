@@ -9,8 +9,7 @@
 * step2 lexcial analysis
 
 
-
-#### step0 : Framework to c interpreter
+### step0 : Framework to c interpreter
 
 For function in the framework
 
@@ -65,6 +64,22 @@ Three parts should be considered.
 Symbol table:
 
 `token hash name type class value btype bclass bvalue`
+
+3.Lex framework
+
+```c
+void next(){
+    char *last_pos;
+    int hash;
+
+    while(token = *src){
+            ++src;
+            //parse token
+        }
+        return;
+    }
+```
+
 
 
 

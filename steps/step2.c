@@ -27,10 +27,10 @@ enum{LEA, IMM, JMP, CALL, JZ, JNZ, ENT, ADJ, LEV, LI, LC, SI, SC, PUSH,
 
 
 //tokens and classes
-enum{
-    Num = 128, Fun, Sys, Glo, Loc, Id,
+enum{ Num = 128, Fun, Sys, Glo, Loc, Id,
     Char, Else, Enum, If, Int, Return, Sizeof, While,
-    Assign, Cond, Lor, Lan, Or, Xor, And, Eq, Ne, Lt, Gt, Le, Shl, Shr, Add, Sub, Mul, Div, Mod, Inc, Dec, Brak};
+    Assign, Cond, Lor, Lan, Or, Xor, And, Eq, Ne, Lt, Gt,
+    Le, Shl, Shr, Add, Sub, Mul, Div, Mod, Inc, Dec, Brak};
 
 //field of identifier
 enum{Token, Hash, Name, Type, Class, Value, BType, BClass, Bvalue, IdSize};
