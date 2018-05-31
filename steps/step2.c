@@ -56,7 +56,7 @@ void next(){
                 src ++;
             }
         }
-        else if((token >= 'a' && token <= 'z') || (token >= 'A' && token <= 'Z') || (token == '_')){
+        else if ((token >= 'a' && token <= 'z') || (token >= 'A' && token <= 'Z') || (token == '_')){
             last_pos = src - 1;
             hash = token;
 
@@ -161,7 +161,7 @@ void next(){
             }
             return;
         }
-        else if(token == '+'){
+        else if (token == '+'){
             //parse '++' and '+'
             if (*src == '+'){
                 src ++;
@@ -206,7 +206,7 @@ void next(){
             }
             return;
         }
-        else if(token == '>'){
+        else if (token == '>'){
             //parse '>=' and '>>' and '>'
             if (*src == '='){
                 src ++;
@@ -277,7 +277,7 @@ void experssion(int level){
 
 void program(){
     next(); //get next token
-    while(token > 0){
+    while (token > 0){
         printf("token is : %c \n", token);
         next();
     }
@@ -285,47 +285,47 @@ void program(){
 
 int eval(){
     int op, *tmp;
-    while(1){
+    while (1) {
         op = *pc++;//get next operation
         //IMM
         if (op == IMM){
             ax = *pc++;
         }
         //LC
-        else if(op == LC){
+        else if (op == LC){
             ax = * (char*)ax;
         }
         //LI
-        else if(op == LI){
+        else if (op == LI){
             ax = * (int *)ax;
         }
         //SC
-        else if(op == SC){
+        else if (op == SC){
             ax = *(char *)*sp++ = ax;
         }
         //PUSH
-        else if(op == PUSH){
+        else if (op == PUSH){
             *--sp = ax;
         }
         //JMP
-        else if(op == JMP){
+        else if (op == JMP){
             pc = (int *)*pc;
         }
         //JZ
-        else if(op == JZ){
+        else if (op == JZ){
             pc = ax ? pc + 1 : (int *)*pc;
         }
         //JNZ
-        else if(op == JNZ){
+        else if (op == JNZ){
             pc = ax ? (int *)*pc : pc + 1;
         }
         //CALL
-        else if(op == CALL){
+        else if (op == CALL){
             *--sp = (int)(pc + 1);
             pc = (int *)*pc;
         }
         //ENT
-        else if(op == ENT){
+        else if (op == ENT){
             *--sp = (int)bp;
             bp = sp;
             sp = sp - *pc++;
@@ -335,13 +335,13 @@ int eval(){
             sp = sp + *pc++;
         }
         //LEV
-        else if(op == LEV){
+        else if (op == LEV){
             sp = bp;
             bp = (int *)(*sp++);
             pc = (int *)*sp++;
         }
         //LEA
-        else if(op == LEA){
+        else if (op == LEA){
             ax = (int)(bp + *pc++);
         }
 
@@ -349,57 +349,57 @@ int eval(){
         else if (op == OR)
             ax = *sp++ | ax;
         //XOR
-        else if(op == XOR)
+        else if (op == XOR)
             ax = *sp++ ^ ax;
         //AND
-        else if(op == AND)
+        else if (op == AND)
             ax = *sp++ & ax;
         //EQ
-        else if(op == EQ)
+        else if (op == EQ)
             ax = *sp++ == ax;
         //NE
-        else if(op == NE)
+        else if (op == NE)
             ax = *sp++ != ax;
         //LT
-        else if(op == LT)
+        else if (op == LT)
             ax = *sp++ < ax;
         //GT
-        else if(op == GT)
+        else if (op == GT)
             ax = *sp++ > ax;
         //SHL
-        else if(op == SHL)
+        else if (op == SHL)
             ax = *sp++ << ax;
         //SHR
-        else if(op == SHR)
+        else if (op == SHR)
             ax = *sp++ >> ax;
         //ADD
-        else if(op == ADD)
+        else if (op == ADD)
             ax = *sp++ + ax;
         //SUB
-        else if(op == SUB)
+        else if (op == SUB)
             ax = *sp++ - ax;
         //MUL
-        else if(op == MUL)
+        else if (op == MUL)
             ax = *sp++ * ax;
         //DIV
-        else if(op == DIV)
+        else if (op == DIV)
             ax = *sp++ / ax;
         //MOD
-        else if(op == MOD)
+        else if (op == MOD)
             ax = *sp++ %  ax;
 
 
         //EXIT
-        else if(op == EXIT){
+        else if (op == EXIT){
             printf("exit(%d) \n", *sp);
             return *sp;
         }
         //OPEN
-        else if(op == OPEN){
+        else if (op == OPEN){
             ax = open((char*)sp[1], sp[0]);
         }
         //CLOS
-        else if(op == CLOS){
+        else if (op == CLOS){
             ax = close(*sp);
         }
         //READ
@@ -407,24 +407,24 @@ int eval(){
             ax = read(sp[2],(char *)sp[1], sp[0]);
         }
         //PRTF
-        else if(op == PRTF){
+        else if (op == PRTF){
             tmp = sp + pc[1];
             ax = printf((char*)tmp[-1],tmp[-2],tmp[-3],tmp[-4],tmp[-5],tmp[-6]);
         }
         //MALC
-        else if(op == MALC){
+        else if (op == MALC){
             ax = (int)malloc(*sp);
         }
         //MSET
-        else if(op == MSET){
+        else if (op == MSET){
             ax = (int)memset((char*)sp[2], sp[1], *sp);
         }
         //MCMP
-        else if(op == MCMP){
+        else if (op == MCMP){
             ax = memcmp((char*)sp[2], (char*)sp[1], *sp);
         }
 
-        else{
+        else {
             printf("unknow instruction:%d\n", op);
         }
     }
@@ -441,44 +441,36 @@ int main(int argc, char** argv)
     poolsize = 256 * 256;
     line = 1;
 
-    if((fd = open(*argv,0)) < 0){
+    if ((fd = open(*argv,0)) < 0){
         printf("could not open(%s)\n", *argv);
         return -1;
     }
 
-    if(!(src = old_src = malloc(poolsize))){
-        printf("could not malloc(%d) for source area. \n", poolsize);
-        return -1;
-    }
-
-    //read the source file
-    if ((i = read(fd, src, poolsize-1)) <= 0){
-        printf("read() returned %d.\n",i);
-        return -1;
-    }
-
-    src[i] = 0; //add EOF character
-    close(fd);
-
     //allocate memory for virtual machine
-    if(!(text = old_text = malloc(poolsize))){
+    if (!(text = old_text = malloc(poolsize))){
         printf("could not malloc(%d) for code segment area.\n",poolsize);
         return -1;
     }
-
-    if(!(data = malloc(poolsize))){
+    //allocate memory for data segment
+    if (!(data = malloc(poolsize))){
         printf("could not malloc(%d) for data segment area.\n", poolsize);
         return -1;
     }
-
-    if(!(stack = malloc(poolsize))){
+    //allocate memory for stack
+    if (!(stack = malloc(poolsize))){
         printf("could not malloc(%d) for stack area.]\n", poolsize);
+        return -1;
+    }
+    //allocate memory for symble table
+    if (!(symbols = malloc(poolsize))){
+        printf("could not malloc(%d) for symbol table.\n", poolsize);
         return -1;
     }
 
     memset(text,0,poolsize);
     memset(data,0,poolsize);
     memset(stack,0,poolsize);
+    memset(symbols, 0,poolsize);
     bp = sp = (int *)((int)stack + poolsize);
     ax = 0;
 
@@ -494,7 +486,47 @@ int main(int argc, char** argv)
     text[i++] = EXIT;
     pc = text;
     //******************************
-    program();
+
+    src = "char else enum if int return sizeof while "
+          "open read close printf malloc memset memcmp exit void main";
+
+    //add keywords to symbol table
+    i = Char;
+    while (i <= While) {
+        next();
+        current_id[Token] = i++;
+    }
+
+    //add library to symbol table
+    i = OPEN;
+    while (i <= EXIT) {
+        next();
+        current_id[Class] = Sys;
+        current_id[Type] = INT;
+        current_id[Value] = i++;
+    }
+    //handle void type
+    next();
+    current_id[Token] = Char;
+    //keep track of main
+    next();
+    idmain = current_id;
+
+    if(!(src = old_src = malloc(poolsize))){
+        printf("could not malloc(%d) for source area. \n", poolsize);
+        return -1;
+    }
+
+    //read the source file
+    if ((i = read(fd, src, poolsize-1)) <= 0){
+        printf("read() returned %d.\n",i);
+        return -1;
+    }
+
+    src[i] = 0; //add EOF character
+    close(fd);
+    //******ut
+    //program();
     //printf("The int size is %d\n",sizeof(int));
     //printf("The long size is %d\n",sizeof(long));
     return eval();
