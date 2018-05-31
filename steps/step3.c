@@ -39,6 +39,10 @@ enum{Token, Hash, Name, Type, Class, Value, BType, BClass, Bvalue, IdSize};
 //types of varible/function
 enum{CHAR, INT, PTR};
 
+int basetype; //the type of a declaration, make it global for convenience
+int expr_type; //the type of an expression
+
+int index_of_bp; //index of bp pointer on stack
 
 void next(){
     char *last_pos;
@@ -272,10 +276,50 @@ void next(){
     return ;
 }
 
+void match(int tk) {
+    if (token == tk) {
+        next();
+    }
+    else {
+        printf("%d: expected token: %d\n", line, tk);
+        exit(-1);
+    }
+}
 
 void experssion(int level){
-    //pass
+    //two parts: unit and operator
 
+    //unit_unary()
+    int *id;
+    int tmp;
+    int *addr;
+    {
+        if (!token) {
+            printf("%d: unexpected token EOF of expression\n", line);
+            exit(-1);
+        }
+        if (token == Num) {
+            match(Num);
+            //emit code
+            *++text = IMM;
+            *++text = token_val;
+            expr_type = INT;
+        }
+        else if (token == '"') {
+            //continous string "abc" "abc"
+
+            //emit code
+            *++text = IMM;
+            *++text = token_val;
+
+            match('"');
+
+            //store the rest strings
+            while (token == '"') {
+                match('"');
+            }
+        }
+    }
 }
 
 void program(){
