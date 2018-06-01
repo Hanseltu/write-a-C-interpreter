@@ -286,7 +286,7 @@ void match(int tk) {
     }
 }
 
-void experssion(int level){
+void expression(int level){
     //two parts: unit and operator
 
     //unit_unary()
@@ -318,6 +318,87 @@ void experssion(int level){
             while (token == '"') {
                 match('"');
             }
+            //append the end of string character '\0', all the data are default to 0
+            //just move data one position forward.
+            data = (char*)(((int)data + sizeof(int)) & (-sizeof(int)));
+            expr_type = PTR;
+        }
+        else if (token == Sizeof) {
+            //'sizeof(int)' 'sizeof(char)' 'sizeof(*ptr)' are supported.
+            match(Sizeof);
+            match('(');
+            expr_type = INT;
+
+            if (token == Int) {
+                match(Int);
+            }
+            else if (token == Char) {
+                match(Char);
+                expr_type = CHAR;
+            }
+            while (token == Mul) {
+                match(Mul);
+                expr_type = expr_type + PTR;
+            }
+            match(')');
+
+            //emit code
+            *++text = IMM;
+            *++text = (expr_type == CHAR) ? sizeof(char) : sizeof(int);
+            expr_type = INT;
+        }
+        else if (token == Id) {
+            //1.function call
+            //2.enum variable
+            //3.global/local variable
+            match(Id);
+            id = current_id;
+            if (token == '(') {
+                //function call
+                match('(');
+
+                //arguments
+                tmp = 0;
+                while (token != ')') {
+                    expression(Assign);
+                    *++text = PUSH;
+                    tmp ++;
+
+                    if (token == ',') {
+                        match(',');
+                    }
+                }
+                match(')');
+
+                //emit code
+                if (id[Class] == Sys) {
+                    //system function
+                    *++text = id[Value];
+                    }
+                else if (id[Class] == Fun) {
+                    //function call
+                    *++text = CALL;
+                    *++text = id[Value];
+                }
+                else {
+                    printf("%d: bad function call\n",line);
+                    exit(-1);
+                }
+
+                //clean the stack for arguments
+                if (tmp > 0) {
+                    *++text = ADJ;
+                    *++text = tmp;
+                }
+                expr_type = id[Value];
+        }
+        }
+        else if (id[Class] == Num) {
+            //enum variable
+            *++text = IMM;
+            *++text = id[Value];
+
+
         }
     }
 }
