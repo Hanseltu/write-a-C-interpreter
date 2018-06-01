@@ -17,7 +17,7 @@ int *stack;
 char *data; //data segment
 int *pc,*bp, *sp, ax, cycle; //virtual machine registers
 
-int *current_id; //currend parsed ID
+int *current_id; //current parsed ID
 int *symbols; //symbol table
 int *idmain; //the main function
 
@@ -818,7 +818,7 @@ void statement(){
     else if (token == '{') {
         match('{');
         while (token != '}') {
-            statment();
+            statement();
         }
 
         match('}');
@@ -981,7 +981,23 @@ void function_declaration() {
     //              | this part
      match('(');
      function_parameter();
+     match(')');
+     match('{');
+     function_body();
+
+     //unwind all variable declarations for all local variable
+     current_id = symbols;
+     while (current_id[Token]) {
+        if (current_id[Class] == Loc) {
+            current_id[Class] = current_id[BClass];
+            current_id[Type] = current_id[BType];
+            current_id[Value] = current_id[BValue];
+        }
+        current_id = current_id + IdSize;
+     }
 }
+
+
 void global_declaration() {
     //global_declaration ::= enum_decl | varible_decl | function_decl
     int type; //tmp, actual type for variable
@@ -1213,6 +1229,7 @@ int eval(){
 int main(int argc, char** argv)
 {
     int i, fd;
+    int *tmp;
 
     argc--;
     argv++;
@@ -1305,7 +1322,21 @@ int main(int argc, char** argv)
     src[i] = 0; //add EOF character
     close(fd);
     //******ut
-    //program();
+    program();
+    //
+    if (!(pc = (int*)idmain[Value])) {
+        printf("main() not defined");
+        return -1;
+    }
+
+    //setup stack;
+    sp = (int *)((int)stack + poolsize);
+    *--sp = EXIT;
+    *--sp = PUSH;
+    tmp = sp;
+    *--sp = argc;
+    *--sp = (int)argv;
+    *--sp = (int)tmp;
     //printf("The int size is %d\n",sizeof(int));
     //printf("The long size is %d\n",sizeof(long));
     return eval();
