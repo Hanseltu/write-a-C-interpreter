@@ -391,7 +391,7 @@ void expression(int level){
                     *++text = tmp;
                 }
                 expr_type = id[Value];
-        }
+            }
         }
         else if (id[Class] == Num) {
             //enum variable
