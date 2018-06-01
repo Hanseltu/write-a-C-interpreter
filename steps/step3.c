@@ -48,7 +48,9 @@ void next(){
     char *last_pos;
     int hash;
 
-    while(token == *src){
+    //token = (int)*src;
+    while ((token = (int)*src) != 0){
+        //token = (int)*src;
         ++src;
 
         //parse token
@@ -72,7 +74,7 @@ void next(){
             //look for existing identifier,linear search
             current_id = symbols;
             while (current_id[Token]){
-                if (current_id[Hash] == hash && !memcmp((char*)current_id[Name], last_pos, src - last_pos)){
+                if (current_id[Hash] == hash && !memcmp((char*)(intptr_t)(current_id[Name]), last_pos, src - last_pos)){
                     //found success!
                     token = current_id[Token];
                     return;
@@ -81,7 +83,7 @@ void next(){
             }
 
             //store New ID
-            current_id[Name] = (int)last_pos;
+            current_id[Name] = (int)(intptr_t)last_pos;
             current_id[Hash] = hash;
             token = current_id[Token] = Id;
             return;
@@ -135,7 +137,7 @@ void next(){
             src ++;
             //if it is a single character, return Num token
             if (token == '"'){
-                token_val = (int)(last_pos);
+                token_val = (int)(intptr_t)(last_pos);
             }
             else {
                 token = Num;
@@ -268,7 +270,7 @@ void next(){
             token = Cond;
             return ;
         }
-        else if (token == '~' || token == ';' || token == '}' || token == '(' || token == ')' || token == ']' || token == ',' || token == ':'){
+        else if (token == '~' || token == ';' || token == '{' || token == '}' || token == '(' || token == ')' || token == ']' || token == ',' || token == ':'){
             //directly return the character as token
             return ;
         }
@@ -320,7 +322,7 @@ void expression(int level){
             }
             //append the end of string character '\0', all the data are default to 0
             //just move data one position forward.
-            data = (char*)(((int)data + sizeof(int)) & (-sizeof(int)));
+            data = (char*)(((int)(intptr_t)data + sizeof(int)) & (-sizeof(int)));
             expr_type = PTR;
         }
         else if (token == Sizeof) {
@@ -559,11 +561,11 @@ void expression(int level){
                     printf("%d:missing colon in conditional\n", line);
                     exit(-1);
                 }
-                *addr = (int)(text + 3);
+                *addr = (int)(intptr_t)(text + 3);
                 *++text = JMP;
                 addr = ++text;
                 expression(Cond);
-                *addr = (int)(text + 1);
+                *addr = (int)(intptr_t)(text + 1);
             }
             else if (token == Lor) {
                 //logic or
@@ -571,7 +573,7 @@ void expression(int level){
                 *++text = JNZ;
                 addr = ++text;
                 expression(Lan);
-                *addr = (int)(text + 1);
+                *addr = (int)(intptr_t)(text + 1);
                 expr_type = INT;
             }
             else if (token == Lan) {
@@ -580,7 +582,7 @@ void expression(int level){
                 *++text = JZ;
                 addr = ++text;
                 expression(Or);
-                *addr = (int)(text  + 1);
+                *addr = (int)(intptr_t)(text  + 1);
                 expr_type = INT;
             }
             else if (token == Or) {
@@ -787,13 +789,13 @@ void statement(){
             match(Else);
 
             //emit code for JMP b
-            *b = (int)(text + 3);
+            *b = (int)(intptr_t)(text + 3);
             *++text = JMP;
             b = ++text;
 
             statement();
         }
-        *b = (int)(text + 1);
+        *b = (int)(intptr_t)(text + 1);
     }
     else if (token == While) {
         match(While);
@@ -812,8 +814,8 @@ void statement(){
         statement();
 
         *++text = JMP;
-        *++text = (int)a;
-        *b = (int)(text + 1);
+        *++text = (int)(intptr_t)(a);
+        *b = (int)(intptr_t)(text + 1);
     }
     else if (token == '{') {
         match('{');
@@ -856,7 +858,7 @@ void enum_declaration(){
             //{a=10}
             next();
             if (token != Num) {
-                printf("%D: bad enum initializer\n",line);
+                printf("%d: bad enum initializer\n",line);
                 exit(-1);
             }
             i = token_val;
@@ -1052,13 +1054,13 @@ void global_declaration() {
 
         if (token == '(') {
             current_id[Class] = Fun;
-            current_id[Value] = (int)(text + 1);
+            current_id[Value] = (int)(intptr_t)(text + 1);
             function_declaration();
         }
         else {
             //variable decl
             current_id[Class] = Glo;
-            current_id[Value] = (int)data;
+            current_id[Value] = (int)(intptr_t)data;
             data = data + sizeof(int);
         }
 
@@ -1088,15 +1090,15 @@ int eval(){
         }
         //LC
         else if (op == LC){
-            ax = * (char*)ax;
+            ax = * (char*)(intptr_t)(ax);
         }
         //LI
         else if (op == LI){
-            ax = * (int *)ax;
+            ax = * (int *)(intptr_t)(ax);
         }
         //SC
         else if (op == SC){
-            ax = *(char *)*sp++ = ax;
+            ax = *(char *)(intptr_t)(*sp++) = ax;
         }
         //PUSH
         else if (op == PUSH){
@@ -1104,24 +1106,24 @@ int eval(){
         }
         //JMP
         else if (op == JMP){
-            pc = (int *)*pc;
+            pc = (int *)(intptr_t)(*pc);
         }
         //JZ
         else if (op == JZ){
-            pc = ax ? pc + 1 : (int *)*pc;
+            pc = ax ? pc + 1 : (int *)(intptr_t)(*pc);
         }
         //JNZ
         else if (op == JNZ){
-            pc = ax ? (int *)*pc : pc + 1;
+            pc = ax ? (int *)(intptr_t)(*pc) : pc + 1;
         }
         //CALL
         else if (op == CALL){
-            *--sp = (int)(pc + 1);
-            pc = (int *)*pc;
+            *--sp = (int)(intptr_t)(pc + 1);
+            pc = (int *)(intptr_t)(*pc);
         }
         //ENT
         else if (op == ENT){
-            *--sp = (int)bp;
+            *--sp = (int)(intptr_t)(bp);
             bp = sp;
             sp = sp - *pc++;
         }
@@ -1132,12 +1134,12 @@ int eval(){
         //LEV
         else if (op == LEV){
             sp = bp;
-            bp = (int *)(*sp++);
-            pc = (int *)*sp++;
+            bp = (int *)(intptr_t)(*sp++);
+            pc = (int *)(intptr_t)(*sp++);
         }
         //LEA
         else if (op == LEA){
-            ax = (int)(bp + *pc++);
+            ax = (int)(intptr_t)(bp + *pc++);
         }
 
         //OR
@@ -1191,7 +1193,7 @@ int eval(){
         }
         //OPEN
         else if (op == OPEN){
-            ax = open((char*)sp[1], sp[0]);
+            ax = open((char*)(intptr_t)(sp[1]), sp[0]);
         }
         //CLOS
         else if (op == CLOS){
@@ -1199,24 +1201,24 @@ int eval(){
         }
         //READ
         else if(op == READ){
-            ax = read(sp[2],(char *)sp[1], sp[0]);
+            ax = read(sp[2],(char *)(intptr_t)(sp[1]), sp[0]);
         }
         //PRTF
         else if (op == PRTF){
             tmp = sp + pc[1];
-            ax = printf((char*)tmp[-1],tmp[-2],tmp[-3],tmp[-4],tmp[-5],tmp[-6]);
+            ax = printf((char*)(intptr_t)(tmp[-1]),tmp[-2],tmp[-3],tmp[-4],tmp[-5],tmp[-6]);
         }
         //MALC
         else if (op == MALC){
-            ax = (int)malloc(*sp);
+            ax = (int)(intptr_t)malloc(*sp);
         }
         //MSET
         else if (op == MSET){
-            ax = (int)memset((char*)sp[2], sp[1], *sp);
+            ax = (int)(intptr_t)memset((char*)(intptr_t)sp[2], sp[1], *sp);
         }
         //MCMP
         else if (op == MCMP){
-            ax = memcmp((char*)sp[2], (char*)sp[1], *sp);
+            ax = memcmp((char*)(intptr_t)sp[2], (char*)(intptr_t)sp[1], *sp);
         }
 
         else {
@@ -1243,22 +1245,22 @@ int main(int argc, char** argv)
     }
 
     //allocate memory for virtual machine
-    if (!(text = old_text = malloc(poolsize))){
+    if (!(text = old_text = (int*)malloc(poolsize))){
         printf("could not malloc(%d) for code segment area.\n",poolsize);
         return -1;
     }
     //allocate memory for data segment
-    if (!(data = malloc(poolsize))){
+    if (!(data = (char*)malloc(poolsize))){
         printf("could not malloc(%d) for data segment area.\n", poolsize);
         return -1;
     }
     //allocate memory for stack
-    if (!(stack = malloc(poolsize))){
+    if (!(stack =(int *)malloc(poolsize))){
         printf("could not malloc(%d) for stack area.]\n", poolsize);
         return -1;
     }
     //allocate memory for symble table
-    if (!(symbols = malloc(poolsize))){
+    if (!(symbols =(int *)malloc(poolsize))){
         printf("could not malloc(%d) for symbol table.\n", poolsize);
         return -1;
     }
@@ -1267,24 +1269,24 @@ int main(int argc, char** argv)
     memset(data,0,poolsize);
     memset(stack,0,poolsize);
     memset(symbols, 0,poolsize);
-    bp = sp = (int *)((int)stack + poolsize);
+    bp = sp = (int *)(intptr_t)((int)(intptr_t)stack + poolsize);
     ax = 0;
 
     //*******ut: caculate 10+20*****
-    i=0;
-    text[i++] = IMM;
-    text[i++] = 20;
-    text[i++] = PUSH;
-    text[i++] = IMM;
-    text[i++] = 20;
-    text[i++] = ADD;
-    text[i++] = PUSH;
-    text[i++] = EXIT;
-    pc = text;
+    //i=0;
+    //text[i++] = IMM;
+    //text[i++] = 20;
+    //text[i++] = PUSH;
+    //text[i++] = IMM;
+    //text[i++] = 20;
+    //text[i++] = ADD;
+    //text[i++] = PUSH;
+    //text[i++] = EXIT;
+    //pc = text;
     //******************************
 
-    src = "char else enum if int return sizeof while "
-          "open read close printf malloc memset memcmp exit void main";
+    src = (char*)("char else enum if int return sizeof while "
+          "open read close printf malloc memset memcmp exit void main");
 
     //add keywords to symbol table
     i = Char;
@@ -1308,7 +1310,7 @@ int main(int argc, char** argv)
     next();
     idmain = current_id;
 
-    if(!(src = old_src = malloc(poolsize))){
+    if(!(src = old_src = (char*)malloc(poolsize))){
         printf("could not malloc(%d) for source area. \n", poolsize);
         return -1;
     }
@@ -1324,19 +1326,19 @@ int main(int argc, char** argv)
     //******ut
     program();
     //
-    if (!(pc = (int*)idmain[Value])) {
+    if (!(pc = (int*)(intptr_t)(idmain[Value]))) {
         printf("main() not defined");
         return -1;
     }
 
     //setup stack;
-    sp = (int *)((int)stack + poolsize);
+    sp = (int *)(intptr_t)((int)(intptr_t)(stack) + poolsize);
     *--sp = EXIT;
     *--sp = PUSH;
     tmp = sp;
     *--sp = argc;
-    *--sp = (int)argv;
-    *--sp = (int)tmp;
+    *--sp = (int)(intptr_t)argv;
+    *--sp = (int)(intptr_t)tmp;
     //printf("The int size is %d\n",sizeof(int));
     //printf("The long size is %d\n",sizeof(long));
     return eval();
