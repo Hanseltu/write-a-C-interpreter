@@ -34,7 +34,7 @@ enum{ Num = 128, Fun, Sys, Glo, Loc, Id,
     Le, Shl, Shr, Add, Sub, Mul, Div, Mod, Inc, Dec, Brak};
 
 //field of identifier
-enum{Token, Hash, Name, Type, Class, Value, BType, BClass, Bvalue, IdSize};
+enum{Token, Hash, Name, Type, Class, Value, BType, BClass, BValue, IdSize};
 
 //types of varible/function
 enum{CHAR, INT, PTR};
@@ -287,7 +287,477 @@ void match(int tk) {
 }
 
 void expression(int level){
-    //pass
+    //two parts: unit and operator
+
+    //unit_unary()
+    int *id;
+    int tmp;
+    int *addr;
+    {
+        if (!token) {
+            printf("%d: unexpected token EOF of expression\n", line);
+            exit(-1);
+        }
+        if (token == Num) {
+            match(Num);
+            //emit code
+            *++text = IMM;
+            *++text = token_val;
+            expr_type = INT;
+        }
+        else if (token == '"') {
+            //continous string "abc" "abc"
+
+            //emit code
+            *++text = IMM;
+            *++text = token_val;
+
+            match('"');
+
+            //store the rest strings
+            while (token == '"') {
+                match('"');
+            }
+            //append the end of string character '\0', all the data are default to 0
+            //just move data one position forward.
+            data = (char*)(((int)data + sizeof(int)) & (-sizeof(int)));
+            expr_type = PTR;
+        }
+        else if (token == Sizeof) {
+            //'sizeof(int)' 'sizeof(char)' 'sizeof(*ptr)' are supported.
+            match(Sizeof);
+            match('(');
+            expr_type = INT;
+
+            if (token == Int) {
+                match(Int);
+            }
+            else if (token == Char) {
+                match(Char);
+                expr_type = CHAR;
+            }
+            while (token == Mul) {
+                match(Mul);
+                expr_type = expr_type + PTR;
+            }
+            match(')');
+
+            //emit code
+            *++text = IMM;
+            *++text = (expr_type == CHAR) ? sizeof(char) : sizeof(int);
+            expr_type = INT;
+        }
+        else if (token == Id) {
+            //1.function call
+            //2.enum variable
+            //3.global/local variable
+            match(Id);
+            id = current_id;
+            if (token == '(') {
+                //function call
+                match('(');
+
+                //arguments
+                tmp = 0;
+                while (token != ')') {
+                    expression(Assign);
+                    *++text = PUSH;
+                    tmp ++;
+
+                    if (token == ',') {
+                        match(',');
+                    }
+                }
+                match(')');
+
+                //emit code
+                if (id[Class] == Sys) {
+                    //system function
+                    *++text = id[Value];
+                    }
+                else if (id[Class] == Fun) {
+                    //function call
+                    *++text = CALL;
+                    *++text = id[Value];
+                }
+                else {
+                    printf("%d: bad function call\n",line);
+                    exit(-1);
+                }
+
+                //clean the stack for arguments
+                if (tmp > 0) {
+                    *++text = ADJ;
+                    *++text = tmp;
+                }
+                expr_type = id[Type];
+            }
+            else if (id[Class] == Num) {
+            //enum variable
+            *++text = IMM;
+            *++text = id[Value];
+            expr_type = INT;
+            }
+            else {
+                //variable
+                if (id[Class] == Loc) {
+                    *++text = LEA;
+                    *++text = index_of_bp - id[Value];
+                }
+                else if (id[Class] == Glo) {
+                    *++text = IMM;
+                    *++text = id[Value];
+                }
+                else {
+                    printf("%d:undefined variable\n",line);
+                    exit(-1);
+                }
+
+                //emit code
+                //load the value of the address which is stored in 'ax'
+                expr_type = id[Type];
+                *++text = (expr_type == Char) ? LC : LI;
+            }
+        }
+        else if (token == '(') {
+            //cast or parenthesis
+            match('(');
+            if (token == Int || token == Char) {
+                tmp = (token == Char) ? CHAR : INT;
+                match(token);
+                while (token == Mul) {
+                    match(Mul);
+                    tmp = tmp + PTR;
+                }
+
+                match(')');
+                expression(Inc);
+                expr_type = tmp;
+            }
+            else {
+                //normal parenthesis
+                expression(Assign);
+                match(')');
+            }
+        }
+        else if (token == Mul) {
+            //dereference *<addr>
+            match(Mul);
+            expression(Inc);
+
+            if (expr_type >= PTR) {
+                expr_type = expr_type - PTR;
+            }
+            else {
+                printf("%d: bad address of \n", line);
+                exit(-1);
+            }
+            expr_type = expr_type + PTR;
+        }
+        else if (token == '!') {
+            //not
+            match('!');
+            expression(Inc);
+
+            //emit code,use <expr> == 0
+            *++text = PUSH;
+            *++text = IMM;
+            *++text = 0;
+            *++text = EQ;
+
+            expr_type = INT;
+        }
+        else if (token == '~') {
+            //bitwise not
+            match('~');
+            *++text = PUSH;
+            *++text = IMM;
+            *++text = -1;
+            *++text = XOR;
+
+            expr_type = INT;
+        }
+        else if (token == Add) {
+            //+var
+            match(Add);
+            expression(Inc);
+            expr_type = INT;
+        }
+        else if (token == Sub) {
+            //-var
+            match(Sub);
+            if (token == Num) {
+                *++text = IMM;
+                *++text = -token_val;
+                match(Num);
+            }
+            else {
+                *++text = IMM;
+                *++text = -1;
+                *++text = PUSH;
+                expression(Inc);
+                *++text = MUL;
+            }
+            expr_type = INT;
+        }
+        else if (token == Inc || token == Dec) {
+            tmp = token;
+            match(token);
+            expression(Inc);
+            if (*text == LC) {
+                *text = PUSH; //to duplicate the address
+                *++text = LC;
+            }
+            else if (*text == LI) {
+                *text = PUSH;
+                *++text = LI;
+            }
+            else {
+                printf("%d: bad lvalue of pre-increment \n", line);
+                exit(-1);
+            }
+            *++text = PUSH;
+            *++text = IMM;
+            *++text = (expr_type > PTR) ? sizeof(int) : sizeof(char);
+            *++text = (expr_type == CHAR) ? SC : SI;
+        }
+        else {
+            printf("%d:bad expression\n",line);
+            exit(-1);
+        }
+    }
+
+    //binary operation and postfix operators.
+    {
+        while (token >= level) {
+            //handle according to current operator's precedence
+            tmp = expr_type;
+            if (token == Assign) {
+                //var
+                match(Assign);
+                if (*text == LC || *text == LI) {
+                    *text = PUSH;  //save the lvalue's pointer
+                }
+                else {
+                    printf("%d: bad lvalue in assignment\n", line);
+                    exit(-1);
+                }
+                expression(Assign);
+                expr_type = tmp;
+                *++text = (expr_type == CHAR) ? SC : SI;
+            }
+            else if (token == Cond) {
+                //expr ? a : b;
+                match(Cond);
+                *++text = JZ;
+                addr = ++text;
+                expression(Assign);
+                if (token == ':') {
+                    match(':');
+                }
+                else {
+                    printf("%d:missing colon in conditional\n", line);
+                    exit(-1);
+                }
+                *addr = (int)(text + 3);
+                *++text = JMP;
+                addr = ++text;
+                expression(Cond);
+                *addr = (int)(text + 1);
+            }
+            else if (token == Lor) {
+                //logic or
+                match(Lor);
+                *++text = JNZ;
+                addr = ++text;
+                expression(Lan);
+                *addr = (int)(text + 1);
+                expr_type = INT;
+            }
+            else if (token == Lan) {
+                //logic and
+                match(Lan);
+                *++text = JZ;
+                addr = ++text;
+                expression(Or);
+                *addr = (int)(text  + 1);
+                expr_type = INT;
+            }
+            else if (token == Or) {
+                //bitwise or
+                match(Or);
+                *++text = PUSH;
+                expression(Xor);
+                *++text = OR;
+                expr_type = INT;
+            }
+            else if (token == And) {
+                //bitwise and
+                match(And);
+                *++text = PUSH;
+                expression(Eq);
+                *++text = AND;
+                expr_type = INT;
+            }
+            else if (token == Eq) {
+                //equall ==
+                match(Eq);
+                *++text = PUSH;
+                expression(Ne);
+                *++text = EQ;
+                expr_type = INT;
+            }
+            else if (token == Ne) {
+                //not equal !=
+                match(Ne);
+                *++text = PUSH;
+                expression(Lt);
+                *++text = NE;
+                expr_type = INT;
+            }
+            else if (token == Lt) {
+                //less than
+                match(Lt);
+                *++text = PUSH;
+                expression(Shl);
+                *++text = LT;
+                expr_type = INT;
+            }
+            else if (token == Gt) {
+                //greater than
+                match(Gt);
+                *++text = PUSH;
+                expression(Shl);
+                *++text = GT;
+                expr_type = INT;
+            }
+            else if (token == Shl) {
+                //shift left
+                match(Shl);
+                *++text = PUSH;
+                expression(Add);
+                *++text = SHL;
+                expr_type = INT;
+            }
+            else if (token == Shr) {
+                //shift right
+                match(Shr);
+                *++text = PUSH;
+                expression(Add);
+                *++text = SHR;
+                expr_type = INT;
+            }
+            else if (token == Add) {
+                //add
+                match(Add);
+                *++text = PUSH;
+                expression(Mul);
+
+                expr_type = tmp;
+                if (expr_type > PTR) {
+                    //pointer type, and not 'char*'
+                    *++text = PUSH;
+                    *++text = IMM;
+                    *++text = sizeof(int);
+                    *++text = MUL;
+                }
+                *++text = ADD;
+            }
+            else if (token == Sub) {
+                //sub
+                match(Sub);
+                *++text = PUSH;
+                expression(Mul);
+                if (tmp > PTR && tmp == expr_type) {
+                    //pointer substraction
+                    *++text = SUB;
+                    *++text = PUSH;
+                    *++text = IMM;
+                    *++text = sizeof(int);
+                    expr_type = INT;
+                }
+                else if (tmp > PTR) {
+                    //pointer movement
+                    *++text = PUSH;
+                    *++text = IMM;
+                    *++text = sizeof(int);
+                    *++text = MUL;
+                    *++text = SUB;
+                    expr_type = tmp;
+                }
+                else {
+                    //numeral substraction
+                    *++text = SUB;
+                    expr_type = tmp;
+                }
+            }
+            else if (token == Mul) {
+                //multiply
+                match(Mul);
+                *++text = PUSH;
+                expression(Inc);
+                *++text = MUL;
+                expr_type = tmp;
+            }
+            else if (token == Div) {
+                match(Div);
+                *++text = PUSH;
+                expression(Inc);
+                *++text = MOD;
+                expr_type = tmp;
+            }
+            else if (token == Inc || token == Dec) {
+                //postifx ++ and --
+                if (*text == LI) {
+                    *text = PUSH;
+                    *++text = LI;
+                }
+                else if (*text == LC) {
+                    *text = PUSH;
+                    *++text = LC;
+                }
+                else {
+                    printf("%d:bad value in increment\n",line);
+                    exit(-1);
+                }
+                *++text = PUSH;
+                *++text = IMM;
+                *++text = (expr_type > PTR) ? sizeof(int) : sizeof(char);
+                *++text = (token == Inc) ? ADD : SUB;
+                *++text = PUSH;
+                *++text = IMM;
+                *++text = (expr_type > PTR) ? sizeof(int) : sizeof(char);
+                *++text = (token == Inc) ? SUB : ADD;
+                match(token);
+            }
+            else if (token == Brak) {
+                //arry access
+                match(Brak);
+                *++text = PUSH;
+                expression(Assign);
+                match(']');
+
+                if (tmp > PTR) {
+                    //pointer, not char*
+                    *++text = PUSH;
+                    *++text = IMM;
+                    *++text = sizeof(int);
+                    *++text = MUL;
+                }
+                else if (tmp < PTR) {
+                    printf("%d:pointer type expected\n",line);
+                    exit(-1);
+                }
+                expr_type = tmp - PTR;
+                *++text = ADD;
+                *++text = (expr_type == CHAR) ? LC : LI;
+            }
+            else {
+                printf("%d:compier error, token = %d\n", line,token);
+                exit(-1);
+            }
+        }
+    }
 }
 
 void enum_declaration(){
@@ -320,13 +790,120 @@ void enum_declaration(){
     }
 }
 
+void function_parameter() {
+    int type;
+    int params;
+    params = 0;
+    while (token != ')') {
+        //int type
+        type = INT;
+        if (token == INT) {
+            match(Int);
+        }
+        else if (token == Char) {
+            type = CHAR;
+            match(Char);
+        }
+
+        //pointer type
+        while (token == Mul){
+            match(Mul);
+            type = type + PTR;
+        }
+
+        //parameter name
+        if (token != Id) {
+            printf("%d: bad parameter declaration\n", line);
+            exit(-1);
+        }
+        if (current_id[Class] == Loc) {
+            printf("%d: duplicate parameter declaration\n",line);
+            exit(-1);
+        }
+
+        match(Id);
+        //store the local variable
+        current_id[BClass] = current_id[Class];
+        current_id[Class] = Loc;
+        current_id[BType] = current_id[Type];
+        current_id[Type] = type;
+        current_id[BValue] = current_id[Value];
+        current_id[Value] = params++;
+
+        if (token == ','){
+            match(',');
+        }
+    }
+    index_of_bp = params + 1;
+}
+
+void function_body() {
+    //1. local declaration
+    //2. statments
+    int pos_local;
+    int type;
+    pos_local = index_of_bp;
+
+    while (token == Int || token == Char){
+        //local variable declaration,like global
+        basetype = (token == Int) ? INT : CHAR;
+        match(token);
+
+        while (token != ';') {
+            type = basetype;
+            while (token == Mul) {
+                match(Mul);
+                type = type + PTR;
+            }
+
+            if (token != Id) {
+                printf("%d: bad local declaration\n",line);
+                exit(-1);
+            }
+            if (current_id[Class] == Loc) {
+                //identifier exists
+                printf("%d: duplicate local declaration\n",line);
+                exit(-1);
+            }
+            match(Id);
+
+            //store the local variable
+            current_id[BClass] = current_id[Class];
+            current_id[Class] = Loc;
+            current_id[BType] = current_id[Type];
+            current_id[Type] = type;
+            current_id[BValue] = current_id[Value];
+            current_id[Value] = ++pos_local;
+
+            if (token == ','){
+                match(',');
+            }
+        }
+        match(';');
+    }
+
+    //save the stack size for local variable
+    *++text = ENT;
+    *++text = pos_local - index_of_bp;
+
+    //statements
+    while (token != '}') {
+        statement();
+    }
+    //emit code for leaving the sub function
+    *++text = LEV;
+}
+
 void function_declaration() {
-    //pass
+    //type func_name (...) {...}
+    //              | this part
+     match('(');
+     function_parameter();
 }
 void global_declaration() {
     //global_declaration ::= enum_decl | varible_decl | function_decl
     int type; //tmp, actual type for variable
-    int i;
+    //int i;
 
     basetype = INT;
 
@@ -400,6 +977,87 @@ void program(){
         global_declaration();
     }
 }
+
+void statement(){
+    //
+    //6 statments
+    //1. if else
+    //2. while
+    //3. {  }
+    //4. return
+    //5. empty statment
+    //6. expression end with
+    //
+    int *a, *b;
+    if (token == If) {
+        match(If);
+        match('(');
+        expression(Assign);
+        match(')');
+
+        //emit code for if
+        *++text = JZ;
+        b = ++text;
+
+        statement();
+
+        if (token == Else) {
+            match(Else);
+
+            //emit code for JMP b
+            *b = (int)(text + 3);
+            *++text = JMP;
+            b = ++text;
+
+            statement();
+        }
+        *b = (int)(text + 1);
+    }
+    else if (token == While) {
+        match(While);
+        a = text + 1;
+        match('(');
+        expression(Assign);
+        match(')');
+
+        *++text = JZ;
+        expression(Assign);
+        match(')');
+
+        *++text = JZ;
+        b = ++text;
+
+        statement();
+
+        *++text = JMP;
+        *++text = (int)a;
+        *b = (int)(text + 1);
+    }
+    else if (token == '{') {
+        match('{');
+        while (token != '}') {
+            statment();
+        }
+
+        match('}');
+    }
+    else if (token == Return) {
+        match(Return);
+        if (token != ';') {
+            expression(Assign);
+        }
+        match(';');
+        *++text = LEV;
+    }
+    else if (token == ';') {
+        match(';');
+    }
+    else {
+        expression(Assign);
+        match(';');
+    }
+}
+
 
 int eval(){
     int op, *tmp;
