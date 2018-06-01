@@ -760,6 +760,88 @@ void expression(int level){
     }
 }
 
+void statement(){
+    //
+    //6 statments
+    //1. if else
+    //2. while
+    //3. {  }
+    //4. return
+    //5. empty statment
+    //6. expression end with
+    //
+    int *a, *b;
+    if (token == If) {
+        match(If);
+        match('(');
+        expression(Assign);
+        match(')');
+
+        //emit code for if
+        *++text = JZ;
+        b = ++text;
+
+        statement();
+
+        if (token == Else) {
+            match(Else);
+
+            //emit code for JMP b
+            *b = (int)(text + 3);
+            *++text = JMP;
+            b = ++text;
+
+            statement();
+        }
+        *b = (int)(text + 1);
+    }
+    else if (token == While) {
+        match(While);
+        a = text + 1;
+        match('(');
+        expression(Assign);
+        match(')');
+
+        *++text = JZ;
+        expression(Assign);
+        match(')');
+
+        *++text = JZ;
+        b = ++text;
+
+        statement();
+
+        *++text = JMP;
+        *++text = (int)a;
+        *b = (int)(text + 1);
+    }
+    else if (token == '{') {
+        match('{');
+        while (token != '}') {
+            statment();
+        }
+
+        match('}');
+    }
+    else if (token == Return) {
+        match(Return);
+        if (token != ';') {
+            expression(Assign);
+        }
+        match(';');
+        *++text = LEV;
+    }
+    else if (token == ';') {
+        match(';');
+    }
+    else {
+        expression(Assign);
+        match(';');
+    }
+}
+
+
+
 void enum_declaration(){
     //parse enum
     int i;
@@ -978,85 +1060,6 @@ void program(){
     }
 }
 
-void statement(){
-    //
-    //6 statments
-    //1. if else
-    //2. while
-    //3. {  }
-    //4. return
-    //5. empty statment
-    //6. expression end with
-    //
-    int *a, *b;
-    if (token == If) {
-        match(If);
-        match('(');
-        expression(Assign);
-        match(')');
-
-        //emit code for if
-        *++text = JZ;
-        b = ++text;
-
-        statement();
-
-        if (token == Else) {
-            match(Else);
-
-            //emit code for JMP b
-            *b = (int)(text + 3);
-            *++text = JMP;
-            b = ++text;
-
-            statement();
-        }
-        *b = (int)(text + 1);
-    }
-    else if (token == While) {
-        match(While);
-        a = text + 1;
-        match('(');
-        expression(Assign);
-        match(')');
-
-        *++text = JZ;
-        expression(Assign);
-        match(')');
-
-        *++text = JZ;
-        b = ++text;
-
-        statement();
-
-        *++text = JMP;
-        *++text = (int)a;
-        *b = (int)(text + 1);
-    }
-    else if (token == '{') {
-        match('{');
-        while (token != '}') {
-            statment();
-        }
-
-        match('}');
-    }
-    else if (token == Return) {
-        match(Return);
-        if (token != ';') {
-            expression(Assign);
-        }
-        match(';');
-        *++text = LEV;
-    }
-    else if (token == ';') {
-        match(';');
-    }
-    else {
-        expression(Assign);
-        match(';');
-    }
-}
 
 
 int eval(){
