@@ -6,7 +6,9 @@
 
 * step1 Virtual machine design
 
-* step2 lexcial analysis
+* step2 Lexcial analysis
+
+* step3 Grammar analysis
 
 
 ### step0 : Framework to c interpreter
@@ -80,7 +82,17 @@ void next(){
     }
 ```
 
+### step3 : Grammar analysis
 
+1.Iteration decline
+
+2.Variable declaration
+
+3.Function declaration
+
+4.Statment processing
+
+5.Experssion processing
 
 
 
