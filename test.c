@@ -74,10 +74,10 @@ int sizeOf(int *a){
     return 0;
 }
 int main() {
-    int *a;
+    //int *a;
     test();
     add(1,3);
-    sizeOf(a);
+    //sizeOf(a);
     //ident(a,'b');
     return 0;
 }
