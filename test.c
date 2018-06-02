@@ -17,10 +17,10 @@ int test(){
     k = 3;
 
     t = (i-j) ? j : k;
-    printf("t=3 \n");
+    printf("t=2 \n");
     printf("expr ? a : b t = %d \n",t);
 
-    t = i && j;
+    t = i && j; //bug
     printf("t=1\n");
     printf("i && j = %d \n", t);
 

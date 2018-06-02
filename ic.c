@@ -593,6 +593,14 @@ void expression(int level){
                 *++text = OR;
                 expr_type = INT;
             }
+            else if (token == Xor) {
+                //bitwise xor
+                match(Xor);
+                *++text = PUSH;
+                expression(Xor);
+                *++text = OR;
+                expr_type = INT;
+            }
             else if (token == And) {
                 //bitwise and
                 match(And);
@@ -658,10 +666,10 @@ void expression(int level){
                 expr_type = tmp;
                 if (expr_type > PTR) {
                     //pointer type, and not 'char*'
-                    *++text = PUSH;
-                    *++text = IMM;
-                    *++text = sizeof(int);
-                    *++text = MUL;
+                   *++text = PUSH;
+                   *++text = IMM;
+                   *++text = sizeof(int);
+                   *++text = MUL;
                 }
                 *++text = ADD;
             }
@@ -1096,6 +1104,10 @@ int eval(){
         else if (op == LI){
             ax = * (int *)(intptr_t)(ax);
         }
+        //SI
+        else if (op == SI) {
+            *(int*)(intptr_t)(*sp++) = ax;
+        }
         //SC
         else if (op == SC){
             ax = *(char *)(intptr_t)(*sp++) = ax;
@@ -1160,9 +1172,15 @@ int eval(){
         //LT
         else if (op == LT)
             ax = *sp++ < ax;
+        //LE
+        else if (op == LE)
+            ax = *sp++ <= ax;
         //GT
         else if (op == GT)
             ax = *sp++ > ax;
+        //GE
+        else if (op == GE)
+            ax = *sp++ >= ax;
         //SHL
         else if (op == SHL)
             ax = *sp++ << ax;
@@ -1223,6 +1241,7 @@ int eval(){
 
         else {
             printf("unknow instruction:%d\n", op);
+            return -1;
         }
     }
     return 0;
