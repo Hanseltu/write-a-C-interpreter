@@ -70,14 +70,16 @@ int ident(char *a, char b) {
 
 int sizeOf(int *a){
    // printf("sizeof(int) = %d\n sizeof(char) = %d\n sizeof(*int) = %d\n", (int)sizeof(int), (int)sizeof(char), (int)sizeof(a));
-   printf("%d \n",sizeof(a));
+  // printf("%d \n",sizeof(a));
     return 0;
 }
 int main() {
-    //int *a;
+    int a[1];
+    *a = 'c';
     test();
     add(1,3);
     //sizeOf(a);
     //ident(a,'b');
+    printf("%d\n",*a);
     return 0;
 }
