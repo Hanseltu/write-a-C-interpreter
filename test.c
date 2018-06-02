@@ -68,18 +68,19 @@ int ident(char *a, char b) {
     return 0;
 }
 
-int sizeOf(int *a){
+int sizeOf(){
    // printf("sizeof(int) = %d\n sizeof(char) = %d\n sizeof(*int) = %d\n", (int)sizeof(int), (int)sizeof(char), (int)sizeof(a));
-  // printf("%d \n",sizeof(a));
+    printf("sizeof(int) = %d \n",sizeof(int));
+    printf("sizeof(char) = %d \n",sizeof(char));
+    printf("sizeof(*ptr) = %d \n",sizeof(int*));
     return 0;
 }
 int main() {
-    int a[1];
-    *a = 'c';
+    //int a= ;
     test();
     add(1,3);
-    //sizeOf(a);
+    sizeOf();
     //ident(a,'b');
-    printf("%d\n",*a);
+    //printf("%d\n",*a);
     return 0;
 }
