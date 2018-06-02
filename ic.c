@@ -454,6 +454,18 @@ void expression(int level){
                 printf("%d: bad address of \n", line);
                 exit(-1);
             }
+            *++text = (expr_type == CHAR) ? LC : LI;
+        }
+        else if (token == And) {
+            match(And);
+            expression(Inc);
+            if (*text == LC || *text == LI) {
+                text --;
+            }
+            else {
+                printf("%d: bad address of \n",line);
+                exit(-1);
+            }
             expr_type = expr_type + PTR;
         }
         else if (token == '!') {
