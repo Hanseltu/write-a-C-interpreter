@@ -725,6 +725,13 @@ void expression(int level){
                 match(Div);
                 *++text = PUSH;
                 expression(Inc);
+                *++text = DIV;
+                expr_type = tmp;
+            }
+            else if (token == Mod) {
+                match(Mod);
+                *++text = PUSH;
+                expression(Inc);
                 *++text = MOD;
                 expr_type = tmp;
             }
