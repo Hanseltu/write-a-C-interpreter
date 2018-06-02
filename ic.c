@@ -908,7 +908,7 @@ void function_parameter() {
     while (token != ')') {
         //int type
         type = INT;
-        if (token == INT) {
+        if (token == Int) {
             match(Int);
         }
         else if (token == Char) {
