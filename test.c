@@ -70,17 +70,21 @@ int ident(char *a, char b) {
 
 int sizeOf(){
    // printf("sizeof(int) = %d\n sizeof(char) = %d\n sizeof(*int) = %d\n", (int)sizeof(int), (int)sizeof(char), (int)sizeof(a));
-    printf("sizeof(int) = %d \n",sizeof(int));
-    printf("sizeof(char) = %d \n",sizeof(char));
-    printf("sizeof(*ptr) = %d \n",sizeof(int*));
+    printf("sizeof(int) = %ld \n",sizeof(int));
+    printf("sizeof(char) = %ld \n",sizeof(char));
+    printf("sizeof(*ptr) = %ld \n",sizeof(int*));
     return 0;
 }
 int main() {
-    //int a= ;
+    int *p;
+    int  i;
+    i = 1;
+    p = &i;
     test();
     add(1,3);
     sizeOf();
     //ident(a,'b');
-    //printf("%d\n",*a);
+    printf("pointer is %p\n",p);
+    printf("sizeof(int) = %ld \n", sizeof(int));
     return 0;
 }

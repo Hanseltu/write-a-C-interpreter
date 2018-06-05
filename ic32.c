@@ -454,6 +454,18 @@ void expression(int level){
                 printf("%d: bad address of \n", line);
                 exit(-1);
             }
+            *++text = (expr_type == CHAR) ? LC : LI;
+        }
+        else if (token == And) {
+            match(And);
+            expression(Inc);
+            if (*text == LC || *text == LI) {
+                text --;
+            }
+            else {
+                printf("%d: bad address of \n",line);
+                exit(-1);
+            }
             expr_type = expr_type + PTR;
         }
         else if (token == '!') {
@@ -593,6 +605,14 @@ void expression(int level){
                 *++text = OR;
                 expr_type = INT;
             }
+            else if (token == Xor) {
+                //bitwise xor
+                match(Xor);
+                *++text = PUSH;
+                expression(Xor);
+                *++text = OR;
+                expr_type = INT;
+            }
             else if (token == And) {
                 //bitwise and
                 match(And);
@@ -658,10 +678,10 @@ void expression(int level){
                 expr_type = tmp;
                 if (expr_type > PTR) {
                     //pointer type, and not 'char*'
-                    *++text = PUSH;
-                    *++text = IMM;
-                    *++text = sizeof(int);
-                    *++text = MUL;
+                   *++text = PUSH;
+                   *++text = IMM;
+                   *++text = sizeof(int);
+                   *++text = MUL;
                 }
                 *++text = ADD;
             }
@@ -703,6 +723,13 @@ void expression(int level){
             }
             else if (token == Div) {
                 match(Div);
+                *++text = PUSH;
+                expression(Inc);
+                *++text = DIV;
+                expr_type = tmp;
+            }
+            else if (token == Mod) {
+                match(Mod);
                 *++text = PUSH;
                 expression(Inc);
                 *++text = MOD;
@@ -881,7 +908,7 @@ void function_parameter() {
     while (token != ')') {
         //int type
         type = INT;
-        if (token == INT) {
+        if (token == Int) {
             match(Int);
         }
         else if (token == Char) {
@@ -1096,6 +1123,10 @@ int eval(){
         else if (op == LI){
             ax = * (int *)(intptr_t)(ax);
         }
+        //SI
+        else if (op == SI) {
+            *(int*)(intptr_t)(*sp++) = ax;
+        }
         //SC
         else if (op == SC){
             ax = *(char *)(intptr_t)(*sp++) = ax;
@@ -1160,9 +1191,15 @@ int eval(){
         //LT
         else if (op == LT)
             ax = *sp++ < ax;
+        //LE
+        else if (op == LE)
+            ax = *sp++ <= ax;
         //GT
         else if (op == GT)
             ax = *sp++ > ax;
+        //GE
+        else if (op == GE)
+            ax = *sp++ >= ax;
         //SHL
         else if (op == SHL)
             ax = *sp++ << ax;
@@ -1223,6 +1260,7 @@ int eval(){
 
         else {
             printf("unknow instruction:%d\n", op);
+            return -1;
         }
     }
     return 0;
