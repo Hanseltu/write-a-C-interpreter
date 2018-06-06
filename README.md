@@ -24,7 +24,7 @@
 
 # How to Run the Code
 
-## 32bit Machine
+### 32bit Machine
 
 ```
 //nodebug
@@ -36,7 +36,7 @@ gcc -o ic32-debug ic32-debug.c
 ./ic32-debug hello.c
 
 ```
-## 64bit Machine
+### 64bit Machine
 
 ```
 //nodebug
@@ -44,8 +44,8 @@ gcc -o ic64 ic64.c
 ./ic64 hello.c
 
 //debug
-gcc -o ic32-debug ic32-debug.c
-./ic32-debug hello.c
+gcc -o ic64-debug ic64-debug.c
+./ic64-debug hello.c
 ```
 
 # About
