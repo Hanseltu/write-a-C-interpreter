@@ -10,8 +10,8 @@ gcc -o xc xc.c (you may need the -m32 option on 64bit machines)
 ./xc hello.c
 ./xc -s hello.c
 
-./xc xc.c hello.c
-./xc xc.c xc.c hello.c
+./xc c4.c hello.c
+./xc c4.c c4.c hello.c
 ```
 
 # About
@@ -26,9 +26,7 @@ Despite the complexity we saw in books about compiler design, writing one is
 not that hard. You don't need that much theory though they will help for
 better understanding the logic behind the code.
 
-Also I write a series of article about how this compiler is built under directory `tutorial/en`.
-
-There is also a chinese version in my blog.
+Also I write a series of article about how this compiler is built(in Chinese though):
 
 1. [手把手教你构建 C 语言编译器（0）——前言](http://lotabout.me/2015/write-a-C-interpreter-0/)
 2. [手把手教你构建 C 语言编译器（1）——设计](http://lotabout.me/2015/write-a-C-interpreter-1/)
