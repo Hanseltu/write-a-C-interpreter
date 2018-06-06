@@ -1,12 +1,12 @@
 # What is the project
 
-* a C interpreter supported x86_32 and x86_64 that interpretes itself.
+* a c interpreter supported x86_32 and x86_64 that interpretes itself.
 
 * 64bit codes test successfully in ubuntu 16.04.
 
 * warning free in the project.
 
-* There are also bugs like the computation with `&&` and `Sizeof` function.
+* There are also bugs in the interpreter like the computation with `&&` and `Sizeof` function.
 
 # Contents
 
@@ -34,7 +34,6 @@ gcc -o ic32 ic32.c
 //debug
 gcc -o ic32-debug ic32-debug.c
 ./ic32-debug hello.c
-
 ```
 ### 64bit Machine
 
@@ -50,7 +49,7 @@ gcc -o ic64-debug ic64-debug.c
 
 # About
 
-Behand are important information to write the interpreter in [write-a-C-interpreter](https://github.com/lotabout/write-a-C-interpreter)
+Behand informations are important ones to write the interpreter in [write-a-C-interpreter](https://github.com/lotabout/write-a-C-interpreter)
 
 I just move them out in the place.
 
