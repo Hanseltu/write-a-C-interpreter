@@ -1,14 +1,22 @@
-C interpreter supported x86_32 and x86_64 that interpretes itself.
+# What is the project
+
+* a C interpreter supported x86_32 and x86_64 that interpretes itself.
+
+* 64bit codes test successfully in ubuntu 16.04.
+
+* warning free in the project.
+
+* There are also bugs like the computation with `&&` and `Sizeof` function.
 
 # Contents
 
-`c-interpreter32` c interpreter implement in x86_32
+`c-interpreter32` c interpreter implement in x86_32.
 
-`c-interpreter64` c interpreter implement in x86_64
+`c-interpreter64` c interpreter implement in x86_64.
 
-`reference` three forks in the project
+`reference` three forks in the project, most codes are based on them.
 
-`steps` tutorial step by step
+`steps` tutorial step by step.
 
 `README.md`
 
@@ -16,19 +24,35 @@ C interpreter supported x86_32 and x86_64 that interpretes itself.
 
 # How to Run the Code
 
-File `xc.c` is the original one and `xc-tutor.c` is the one that I make for
-the tutorial step by step.
+## 32bit Machine
 
 ```
-gcc -o xc xc.c (you may need the -m32 option on 64bit machines)
-./xc hello.c
-./xc -s hello.c
+//nodebug
+gcc -o ic32 ic32.c
+./ic32 hello.c
 
-./xc xc.c hello.c
-./xc xc.c xc.c hello.c
+//debug
+gcc -o ic32-debug ic32-debug.c
+./ic32-debug hello.c
+
+```
+## 64bit Machine
+
+```
+//nodebug
+gcc -o ic64 ic64.c
+./ic64 hello.c
+
+//debug
+gcc -o ic32-debug ic32-debug.c
+./ic32-debug hello.c
 ```
 
 # About
+
+Behand are important information to write the interpreter in [write-a-C-interpreter](https://github.com/lotabout/write-a-C-interpreter)
+
+I just move them out in the place.
 
 This project is inspired by [c4](https://github.com/rswier/c4) and is largely
 based on it.
@@ -64,6 +88,10 @@ Further Reading:
 
 
 Forks:
+
+- [A fork that is the source about c4](https://github.com/rswier/c4)
+
+- [A fork that implement more for c4.c](https://github.com/lotabout/write-a-C-interpreter)
 
 - [A fork that implement debugger for xc.c](https://github.com/descent/write-a-C-interpreter)
 
